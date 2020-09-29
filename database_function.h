@@ -9,9 +9,6 @@
 #include <QSqlQuery>
 #include <QTextCodec>
 
-#include <QThread>
-#include <QMutex>
-
 #include <QDebug>
 #include <deque>
 #include <QDateTime>
@@ -45,68 +42,62 @@ extern deque<SOperationInfo> d_SOperationInfo;
 
 
 /*获取数据库的连接状态*/
-class CConnectDatabaseThread : public QThread
+class CConnectDatabaseThread
 {
 public:
     CConnectDatabaseThread();
     ~CConnectDatabaseThread();
-    virtual void run();
-
-protected:
-
+    void run();
+    void start(){_thread= std::thread(run)};
 private:
-
+    std::thread _thread;
 };
 
 /*读取数据库里的操作*/
-class CReadOperationThread : public QThread
+class CReadOperationThread
 {
 public:
     CReadOperationThread();
     ~CReadOperationThread();
-    virtual void run();
-
     volatile bool isReadOperation;       //isStop是易失性变量，需要用volatile进行申明
 
-protected:
-
+    void run();
+    void start(){_thread= std::thread(run)};
 private:
+    std::thread _thread;
 
 };
 
 /* 运行逻辑 */
 /* 若有一个上料机在working的话，开启线程*/
-class CWriteProductStatusThread : public QThread
+class CWriteProductStatusThread
 {
 public:
     CWriteProductStatusThread();
     ~CWriteProductStatusThread();
 
-    virtual void run();
-
      volatile bool isWriteProductStatus;
 
-protected:
-
+    void run();
+    void start(){_thread= std::thread(run)};
 private:
-
+    std::thread _thread;
 };
 
 
-class CThisProductStatusThread : public QThread
+class CThisProductStatusThread
 {
 public:
     CThisProductStatusThread();
     ~CThisProductStatusThread();
 
-    virtual void run();
 
     volatile bool isThisProductStatus;
 
-protected:
-
+    void run();
+    void start(){_thread= std::thread(run)};
 private:
-
+    std::thread _thread;
 
     bool is_new_row = true;
 

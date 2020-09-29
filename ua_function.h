@@ -5,10 +5,6 @@
 
 #include "globalVariable.h"
 
-#include <QThread>
-#include <QMutex>
-
-
 
 typedef struct productFeatuerDescriptionBrowseName
 {
@@ -23,17 +19,15 @@ extern UA_Client *client;
 
 
 /*获取UA的连接状态*/
-class CConnectUAThread : public QThread
+class CConnectUAThread
 {
 public:
     CConnectUAThread();
     ~CConnectUAThread();
-    virtual void run();
-
-protected:
-
+    void run();
+    void start(){_thread= std::thread(run)};
 private:
-
+    std::thread _thread;
 };
 
 
