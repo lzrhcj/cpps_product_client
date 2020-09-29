@@ -28,7 +28,7 @@ using namespace std;
 extern QSqlDatabase db;
 extern QString databaseConnectionName;
 
-extern QMutex mutexReadDatabase;
+extern mutex mutexReadDatabase;
 
 struct SOperationInfo
 {

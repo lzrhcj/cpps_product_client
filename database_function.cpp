@@ -3,7 +3,7 @@
 
 deque<SOperationInfo> d_SOperationInfo(500);
 
-QMutex mutexReadDatabase;
+mutex mutexReadDatabase;
 
 QString databaseConnectionName = "public_cpps";
 
