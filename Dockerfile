@@ -5,20 +5,19 @@ RUN apk update\
 
 WORKDIR /
 
-COPY /cpps_product_client /
-
 EXPOSE 4000
 
 ENV TZ=Asia/Shanghai
-
-RUN cmake .
-RUN make 
 
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && \ 
     echo $TZ > /etc/timezone
 
 ENV IPAddress 192.168.137.41
 ENV IPPort 4844
+
+COPY /cpps_product_client /
+RUN cmake .
+RUN make 
 
 # Commands when creating a new container
 ENTRYPOINT "/cpps_product_client" ${IPAddress} ${IPPort}

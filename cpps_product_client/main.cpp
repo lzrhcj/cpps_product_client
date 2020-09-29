@@ -149,15 +149,16 @@ int main(int argc, char *argv[])
 
             g_bIsUAGetInfo =false;
 
+            printf("UAClient连接失败，状态为%i\n",g_bIsUARunning);
             clearAllGlobalVariable();
 
-            printf("UAClient连接失败，状态为%i\n",g_bIsUARunning);
             sleep_for(3s);
         }
     }
 
     UA_Client_disconnect(client);
     UA_Client_delete(client);
+    printf("程序自然退出");
     return 0;
 }
 

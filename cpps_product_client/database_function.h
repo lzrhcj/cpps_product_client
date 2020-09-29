@@ -4,7 +4,7 @@
 #define DB_CONFIG_DEBUG
 
 #include <deque>
-#include "mysql.h"
+#include <mysql.h>
 
 #include "globalVariable.h"
 
@@ -16,7 +16,7 @@
 
 using namespace std;
 
-extern MYSQL* db;
+extern MYSQL *db;
 extern string databaseConnectionName;
 
 extern mutex mutexReadDatabase;
