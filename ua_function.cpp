@@ -72,7 +72,7 @@ void CConnectUAThread::run()
 
         g_bIsUARunning = UA_Client_connect(client, url.c_str());
         UA_Client_run_iterate(client,0);
-        QThread::sleep(2);
+        sleep_for(2s)
 
     }
 

@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         if(g_bIsUARunning == UA_STATUSCODE_GOOD)
         {
             printf("UAClient连接成功，状态为%i\n",g_bIsUARunning);
-            delay(2);
+            sleep_for(2s);
 
             if(g_bIsUAGetInfo==false)
             {
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
             clearAllGlobalVariable();
 
             printf("UAClient连接失败，状态为%i\n",g_bIsUARunning);
-            delay(3);
+            sleep_for(3s);
         }
     }
 
@@ -182,13 +182,6 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-void delay(int i)
-{
-    QThread::sleep(i);
-}
-
 
 void clearAllGlobalVariable()
 {

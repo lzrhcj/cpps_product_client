@@ -54,7 +54,7 @@ void CConnectDatabaseThread::run()
     while(g_bIsMainRunning)
     {
         g_bIsMySQLConnected = db.isOpen();
-        QThread::sleep(5); //每5秒查询连接状态
+        sleep_for(5s) //每5秒查询连接状态
 
         if(!g_bIsMySQLConnected)
         {
@@ -130,9 +130,9 @@ void CReadOperationThread::run()
                 isReadOperation = false;
             }
 
-            QThread::sleep(1);
+            sleep_for(1s)
         }
-        QThread::sleep(1);
+        sleep_for(1s)
     }
 }
 
@@ -170,7 +170,7 @@ void CWriteProductStatusThread::run()
 
                     while((g_bIsFinished==false)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
                     {
-                        QThread::sleep(1);
+                        sleep_for(1s)
                     }
 
 
@@ -178,7 +178,7 @@ void CWriteProductStatusThread::run()
                     isWriteProductStatus =false;
 
                     //等一会
-                    QThread::sleep(2);
+                    sleep_for(2s)
 
                     //完成了就把线程删了
                     delete MyThisProductStatusThread;
@@ -186,10 +186,10 @@ void CWriteProductStatusThread::run()
                 }
             }
 
-            QThread::sleep(1);
+            sleep_for(1s)
         }
 
-        QThread::sleep(1);
+        sleep_for(1s)
     }
 
 }
@@ -581,7 +581,7 @@ void CThisProductStatusThread::run()
             g_bIsFinished = true;
 
         }
-        QThread::sleep(1);
+        sleep_for(1s)
     }
 }
 

@@ -8,6 +8,11 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <chrono>
+#include <thread>
+
+using std::this_thread::sleep_for;
+using std::chrono::milliseconds;
 
 using namespace std;
 
@@ -41,9 +46,6 @@ extern UA_Variant g_var_productFeatureDescription[10];
 
 
 void clearAllGlobalVariable();
-
-void delay(int i);
-
 
 
 #endif // GLOBALVARIABLE_H
