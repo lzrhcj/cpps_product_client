@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(cpps_product_client)
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -DUA_ARCHITECTURE_POSIX -fpermissive")
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 find_package(Threads)
 

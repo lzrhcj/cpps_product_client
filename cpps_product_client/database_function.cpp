@@ -98,7 +98,7 @@ void CReadOperationThread::run(bool isReadOperation)
 
                 advance(d_SOperationInfo_iterator, i);//迭代器前进i个元素，注意i是从0开始
 
-                d_SOperationInfo_iterator->operation_id = sql_row[0]; //读取第1列字段：id
+                d_SOperationInfo_iterator->operation_id = stoi(sql_row[0]); //读取第1列字段：id
                 d_SOperationInfo_iterator->operation_guid_product = sql_row[1]; //读取第2列字段：guid_product
                 d_SOperationInfo_iterator->operation_name = sql_row[2]; //读取第3列字段：operation_name
                 d_SOperationInfo_iterator->operation_status = sql_row[3];//读取第5列字段：operation_status

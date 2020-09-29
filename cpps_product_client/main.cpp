@@ -24,11 +24,8 @@ static void stopHandler(int sig)
 
 int main(int argc, char *argv[])
 {
-
     signal(SIGINT, stopHandler);
     signal(SIGTERM, stopHandler);
-
-
 
     if (argc == 1)
     {
@@ -160,9 +157,7 @@ int main(int argc, char *argv[])
     }
 
     UA_Client_disconnect(client);
-
     UA_Client_delete(client);
-
     return 0;
 }
 
