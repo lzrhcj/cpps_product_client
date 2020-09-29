@@ -5,7 +5,7 @@ deque<SOperationInfo> d_SOperationInfo(500);
 
 mutex mutexReadDatabase;
 
-QString databaseConnectionName = "public_cpps";
+string databaseConnectionName = "public_cpps";
 
 string thisProductGuid = "34848b50-0c40-11ea-8d72-02004c4f4f50";
 
@@ -83,7 +83,7 @@ CReadOperationThread::~CReadOperationThread()
     isReadOperation = false;
 }
 
-void CReadOperationThread::run()
+void CReadOperationThread::run(bool isReadOperation)
 {
     while(g_bIsMainRunning == true)
     {
@@ -147,7 +147,7 @@ CWriteProductStatusThread::~CWriteProductStatusThread()
     isWriteProductStatus=false;
 }
 
-void CWriteProductStatusThread::run()
+void CWriteProductStatusThread::run(bool isWriteProductStatus)
 {
     while(g_bIsMainRunning == true)
     {
@@ -210,11 +210,11 @@ CThisProductStatusThread::~CThisProductStatusThread()
     isThisProductStatus=false;
 }
 
-void CThisProductStatusThread::run()
+void CThisProductStatusThread::run(CThisProductStatusThread* me)
 {
-    while(isThisProductStatus)
+    while(me->isThisProductStatus)
     {
-        if (is_new_row==false)
+        if (me->is_new_row==false)
         {
 
             string str_insertProduct_query=set_query(QUERY_INSERT,TABLE_PRODUCTINFO,
@@ -233,7 +233,7 @@ void CThisProductStatusThread::run()
 
             mutexReadDatabase.lock();
 
-            QString q_str_insertProduct_query = QString::fromStdString(str_insertProduct_query);
+            string q_str_insertProduct_query = string::fromStdString(str_insertProduct_query);
 
             QSqlQuery query_operation(q_str_insertProduct_query,db);
 
@@ -256,20 +256,20 @@ void CThisProductStatusThread::run()
 
                 mutexReadDatabase.lock();
 
-                QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                 QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                 mutexReadDatabase.unlock();
             }
 
-            is_new_row =true;
+            me->is_new_row =true;
 
         }
 
         for(int i=0;i<=499;i++)
         {
 
-            if(flag_operation_finished[0]==false)
+            if (me->flag_operation_finished[0]==false)
             {
 
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
@@ -284,16 +284,16 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[0]= true;
+                    me->flag_operation_finished[0]= true;
                 }
             }
 
-            if(flag_operation_finished[1]==false)
+            if (me->flag_operation_finished[1]==false)
             {
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
                         (d_SOperationInfo.at(i).operation_name=="Operation_LM")&&
@@ -308,7 +308,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -328,16 +328,16 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[1]= true;
+                    me->flag_operation_finished[1]= true;
                 }
             }
 
-            if(flag_operation_finished[2]==false)
+            if(me->flag_operation_finished[2]==false)
             {
 
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
@@ -352,7 +352,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -371,7 +371,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -390,12 +390,12 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[2]= true;
+                    me->flag_operation_finished[2]= true;
                 }
 
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
@@ -410,16 +410,16 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[2]= true;
+                    me->flag_operation_finished[2]= true;
                 }
             }
 
-            if(flag_operation_finished[3]==false)
+            if (me->flag_operation_finished[3]==false)
             {
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
                         (d_SOperationInfo.at(i).operation_name=="Operation_package")&&
@@ -434,7 +434,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -454,16 +454,16 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[3]= true;
+                    me->flag_operation_finished[3]= true;
                 }
             }
 
-            if(flag_operation_finished[4]==false)
+            if (me->flag_operation_finished[4]==false)
             {
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
                         (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
@@ -478,7 +478,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -497,16 +497,16 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[4]= true;
+                    me->flag_operation_finished[4]= true;
                 }
             }
 
-            if(flag_operation_finished[5]==false)
+            if (me->flag_operation_finished[5]==false)
             {
                 if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
                         (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
@@ -520,7 +520,7 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
@@ -541,22 +541,22 @@ void CThisProductStatusThread::run()
 
                     mutexReadDatabase.lock();
 
-                    QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
                     QSqlQuery query_operation(q_str_insertProduct_query,db);
 
                     mutexReadDatabase.unlock();
 
-                    flag_operation_finished[5]= true;
+                    me->flag_operation_finished[5]= true;
                 }
             }
         }
 
-        if((flag_operation_finished[0]==true)&&
-                (flag_operation_finished[1]==true)&&
-                (flag_operation_finished[2]==true)&&
-                (flag_operation_finished[3]==true)&&
-                (flag_operation_finished[4]==true)&&
-                (flag_operation_finished[5]==true))
+        if( (me->flag_operation_finished[0]==true)&&
+                 (me->flag_operation_finished[1]==true)&&
+                 (me->flag_operation_finished[2]==true)&&
+                 (me->flag_operation_finished[3]==true)&&
+                 (me->flag_operation_finished[4]==true)&&
+                 (me->flag_operation_finished[5]==true))
         {
             string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
             {"product_status","done",
@@ -569,12 +569,12 @@ void CThisProductStatusThread::run()
 
             mutexReadDatabase.lock();
 
-            QString q_str_insertProduct_query = QString::fromStdString(str_updateProduct_query);
+            string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
             QSqlQuery query_operation(q_str_insertProduct_query,db);
 
             mutexReadDatabase.unlock();
 
-            isThisProductStatus=false;
+            me->isThisProductStatus=false;
 
             g_bIsFinished = true;
 

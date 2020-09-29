@@ -4,17 +4,17 @@
 
 #include "open62541.h"
 
-#include <QString>
+#include <string>
 
 #include <iostream>
 #include <stdio.h>
 #include <chrono>
 #include <thread>
-
-using std::this_thread::sleep_for;
-using std::chrono::milliseconds;
+#include <mutex>
 
 using namespace std;
+using namespace std::chrono_literals;
+using std::this_thread::sleep_for;
 
 
 extern string opcuaIP;

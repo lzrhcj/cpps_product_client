@@ -1,7 +1,7 @@
 QT -= gui
 QT += sql
 
-CONFIG += c++11 console
+CONFIG += c++14 console
 CONFIG -= app_bundle
 
 # The following define makes your compiler emit warnings if you use
@@ -32,3 +32,5 @@ HEADERS += \
     globalVariable.h \
     open62541.h \
     ua_function.h
+    
+CONFIG += warn_off

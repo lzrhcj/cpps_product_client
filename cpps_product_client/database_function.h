@@ -15,18 +15,16 @@
 
 #include "globalVariable.h"
 
-
 #define DatabaseName "cpps_db"
 #define HostName "mysql"
 #define Port 3306
 #define UserName "cpps"
 #define Password "cpps"
 
-
 using namespace std;
 
 extern QSqlDatabase db;
-extern QString databaseConnectionName;
+extern string databaseConnectionName;
 
 extern mutex mutexReadDatabase;
 
@@ -40,15 +38,15 @@ struct SOperationInfo
 
 extern deque<SOperationInfo> d_SOperationInfo;
 
-
 /*获取数据库的连接状态*/
 class CConnectDatabaseThread
 {
 public:
     CConnectDatabaseThread();
     ~CConnectDatabaseThread();
-    void run();
-    void start(){_thread= std::thread(run)};
+    static void run();
+    void start() { _thread = std::thread(CConnectDatabaseThread::run); };
+
 private:
     std::thread _thread;
 };
@@ -59,13 +57,12 @@ class CReadOperationThread
 public:
     CReadOperationThread();
     ~CReadOperationThread();
-    volatile bool isReadOperation;       //isStop是易失性变量，需要用volatile进行申明
+    volatile bool isReadOperation; //isStop是易失性变量，需要用volatile进行申明
+    static void run(bool isReadOperation);
+    void start() { _thread = std::thread(CReadOperationThread::run, isReadOperation); };
 
-    void run();
-    void start(){_thread= std::thread(run)};
 private:
     std::thread _thread;
-
 };
 
 /* 运行逻辑 */
@@ -75,34 +72,27 @@ class CWriteProductStatusThread
 public:
     CWriteProductStatusThread();
     ~CWriteProductStatusThread();
+    volatile bool isWriteProductStatus;
+    static void run(bool isWriteProductStatus);
+    void start() { _thread = std::thread(CWriteProductStatusThread::run, isWriteProductStatus); };
 
-     volatile bool isWriteProductStatus;
-
-    void run();
-    void start(){_thread= std::thread(run)};
 private:
     std::thread _thread;
 };
-
 
 class CThisProductStatusThread
 {
 public:
     CThisProductStatusThread();
     ~CThisProductStatusThread();
-
-
     volatile bool isThisProductStatus;
+    static void run(CThisProductStatusThread *me);
+    void start() { _thread = std::thread(CThisProductStatusThread::run, this); };
 
-    void run();
-    void start(){_thread= std::thread(run)};
 private:
     std::thread _thread;
-
     bool is_new_row = true;
-
-    bool flag_operation_finished[10]={false,false,false,false,false,false,false,false,false,false};
-
+    bool flag_operation_finished[10] = {false, false, false, false, false, false, false, false, false, false};
 };
 
 enum QUERYTYPE
@@ -139,6 +129,5 @@ enum TABLENAME
  * "DELETE FROM `cpps_db`.`table_equipmentinfo` WHERE (`equipment_id` = '1453');"
  */
 string set_query(QUERYTYPE querytype, TABLENAME tablename, initializer_list<string> param_list);
-
 
 #endif // FUNCTION_H
