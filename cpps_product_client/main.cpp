@@ -1,14 +1,6 @@
-#include <QCoreApplication>
-
 #include "globalVariable.h"
-
 #include "ua_function.h"
-
 #include "database_function.h"
-
-#include <QDateTime>
-
-
 #include <signal.h>
 #include <stdlib.h>
 

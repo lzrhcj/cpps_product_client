@@ -9,7 +9,7 @@ string databaseConnectionName = "public_cpps";
 
 string thisProductGuid = "34848b50-0c40-11ea-8d72-02004c4f4f50";
 
-QSqlDatabase db;
+MYSQL *db = NULL;
 
 volatile bool g_bIsFinished = false;
 
@@ -24,27 +24,17 @@ CConnectDatabaseThread::CConnectDatabaseThread()
 CConnectDatabaseThread::~CConnectDatabaseThread()
 {
     g_bIsMySQLConnected = false;
-    db.close();
 }
 
 void CConnectDatabaseThread::run()
 {
-    db = QSqlDatabase::addDatabase("QMYSQL",databaseConnectionName);
-
-    db.setDatabaseName(DatabaseName);
-    db.setHostName(HostName);
-    db.setPort(Port);
-    db.setUserName(UserName);
-    db.setPassword(Password);
-
-    g_bIsMySQLConnected = db.open();//建立数据库连接
-
-    if(!g_bIsMySQLConnected)
-    {
-        printf((char*)"连接数据库失败\n");
+    mysql_init(db);
+if (!mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0))
+	{
+		cout << "连接数据库失败"<< endl;
+		cout << mysql_error(db) << endl;
         g_bIsMySQLConnected = false;
-
-    }
+	}
     else
     {
         printf((char*)"连接数据库成功\n");
@@ -53,7 +43,7 @@ void CConnectDatabaseThread::run()
 
     while(g_bIsMainRunning)
     {
-        g_bIsMySQLConnected = db.isOpen();
+        g_bIsMySQLConnected = (db == NULL);
         sleep_for(5s); //每5秒查询连接状态
 
         if(!g_bIsMySQLConnected)
@@ -61,8 +51,7 @@ void CConnectDatabaseThread::run()
             for(int i=1;i<=10;i++)
             {
                 printf((char*)"重连数据库第%i次\n",i);
-                g_bIsMySQLConnected = false;
-                g_bIsMySQLConnected = db.open();//建立数据库连接
+                g_bIsMySQLConnected = mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0);//建立数据库连接
             }
         }
         else
@@ -91,27 +80,28 @@ void CReadOperationThread::run(bool isReadOperation)
         {
             mutexReadDatabase.lock();
 
-            QSqlQuery query_operation("SELECT * FROM cpps_db.tab_operationinfo;",db);
+            mysql_query(db, "SELECT * FROM cpps_db.tab_operationinfo;");
+            auto result = mysql_store_result(db);
 
-            int oper_num = query_operation.size();
+            int oper_num = mysql_num_rows(result);
 
 #ifdef DB_CONFIG_DEBUG
             printf("操作表总共有%i行\n",oper_num);
 #endif
             // int new_size = deque_equipment_ip_port.size();
 
-            for (int i = 0; i <= oper_num-1; i++)
+            for (int i = 0; i <= oper_num; i++)
             {
-                query_operation.next();
+				auto sql_row = mysql_fetch_row(result);
 
                 deque<SOperationInfo>::iterator d_SOperationInfo_iterator = d_SOperationInfo.begin();
 
                 advance(d_SOperationInfo_iterator, i);//迭代器前进i个元素，注意i是从0开始
 
-                d_SOperationInfo_iterator->operation_id = query_operation.value(0).toInt(); //读取第1列字段：id
-                d_SOperationInfo_iterator->operation_guid_product = query_operation.value(1).toString().toStdString(); //读取第2列字段：guid_product
-                d_SOperationInfo_iterator->operation_name = query_operation.value(2).toString().toStdString(); //读取第3列字段：operation_name
-                d_SOperationInfo_iterator->operation_status = query_operation.value(4).toString().toStdString();//读取第5列字段：operation_status
+                d_SOperationInfo_iterator->operation_id = sql_row[0]; //读取第1列字段：id
+                d_SOperationInfo_iterator->operation_guid_product = sql_row[1]; //读取第2列字段：guid_product
+                d_SOperationInfo_iterator->operation_name = sql_row[2]; //读取第3列字段：operation_name
+                d_SOperationInfo_iterator->operation_status = sql_row[3];//读取第5列字段：operation_status
 
 #ifdef DB_CONFIG_DEBUG
                 // qDebug()<<d_SOperationInfo_iterator->operation_id;
@@ -223,8 +213,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
              "feature_1","feature_1_status",
 
              thisProductGuid,"working",
-             QDateTime::currentDateTime().date().toString().toStdString()+" "+
-             QDateTime::currentDateTime().time().toString().toStdString(),
+             "NOW()",
              g_str_productFeatureDescription[0],"working",} );
 
             printf("%s\n",str_insertProduct_query.c_str());
@@ -233,9 +222,8 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
             mutexReadDatabase.lock();
 
-            string q_str_insertProduct_query = string::fromStdString(str_insertProduct_query);
 
-            QSqlQuery query_operation(q_str_insertProduct_query,db);
+            mysql_query(db, str_insertProduct_query.c_str());
 
             mutexReadDatabase.unlock();
 
@@ -256,8 +244,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                 mutexReadDatabase.lock();
 
-                string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                QSqlQuery query_operation(q_str_insertProduct_query,db);
+                mysql_query(db, str_updateProduct_query.c_str());
 
                 mutexReadDatabase.unlock();
             }
@@ -284,8 +271,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -308,8 +294,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -328,8 +313,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -352,8 +336,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -371,8 +354,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -390,8 +372,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -410,8 +391,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -434,8 +414,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -454,8 +433,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -478,8 +456,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
                 }
@@ -497,8 +474,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -520,8 +496,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -541,8 +516,7 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.lock();
 
-                    string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-                    QSqlQuery query_operation(q_str_insertProduct_query,db);
+                    mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
 
@@ -561,16 +535,14 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
             string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
             {"product_status","done",
              "End_time",
-             QDateTime::currentDateTime().date().toString().toStdString()+" "+
-             QDateTime::currentDateTime().time().toString().toStdString(),
+             "NOW()",
              "Guid_product",thisProductGuid});
 
             printf("%s\n",str_updateProduct_query.c_str());
 
             mutexReadDatabase.lock();
 
-            string q_str_insertProduct_query = string::fromStdString(str_updateProduct_query);
-            QSqlQuery query_operation(q_str_insertProduct_query,db);
+            mysql_query(db, str_updateProduct_query.c_str());
 
             mutexReadDatabase.unlock();
 

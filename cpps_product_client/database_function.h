@@ -3,15 +3,8 @@
 
 #define DB_CONFIG_DEBUG
 
-#include <QCoreApplication>
-
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QTextCodec>
-
-#include <QDebug>
 #include <deque>
-#include <QDateTime>
+#include "mysql.h"
 
 #include "globalVariable.h"
 
@@ -23,7 +16,7 @@
 
 using namespace std;
 
-extern QSqlDatabase db;
+extern MYSQL* db;
 extern string databaseConnectionName;
 
 extern mutex mutexReadDatabase;
