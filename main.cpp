@@ -71,24 +71,20 @@ int main(int argc, char *argv[])
     }
 
     //线程常开，获取数据库的连接状态
-    CConnectDatabaseThread *MyConnectDatabaseThread;
-    MyConnectDatabaseThread = new CConnectDatabaseThread;
-    MyConnectDatabaseThread->start();
+    CConnectDatabaseThread MyConnectDatabaseThread;
+    MyConnectDatabaseThread.start();
 
     //线程常开，获取UAServer的连接状态,并获取Server的信息
-    CConnectUAThread *MyConnectUAThread;
-    MyConnectUAThread = new CConnectUAThread;
-    MyConnectUAThread->start();
+    CConnectUAThread MyConnectUAThread;
+    MyConnectUAThread.start();
 
     //也先在这里开启线程，只是可能不会一直运行
     //读取操作表线程
-    CReadOperationThread *MyReadOperationThread;
-    MyReadOperationThread = new CReadOperationThread;
+    CReadOperationThread MyReadOperationThread;
 
 
     //运行产品操作逻辑线程
-    CWriteProductStatusThread *MyWriteProductStatusThread;
-    MyWriteProductStatusThread = new CWriteProductStatusThread;
+    CWriteProductStatusThread MyWriteProductStatusThread;
 
 
     //****************************************************//
@@ -147,11 +143,11 @@ int main(int argc, char *argv[])
 
                 g_bIsFinished = false;
 
-                MyReadOperationThread->isReadOperation = true;
-                MyReadOperationThread->start();
+                MyReadOperationThread.isReadOperation = true;
+                MyReadOperationThread.start();
 
-                MyWriteProductStatusThread->isWriteProductStatus = true;
-                MyWriteProductStatusThread->start();
+                MyWriteProductStatusThread.isWriteProductStatus = true;
+                MyWriteProductStatusThread.start();
 
             }
 
@@ -159,8 +155,8 @@ int main(int argc, char *argv[])
         else
         {
             //不能在线程运行的时候quit，会报错
-            MyReadOperationThread->isReadOperation = false;
-            MyWriteProductStatusThread->isWriteProductStatus =false;
+            MyReadOperationThread.isReadOperation = false;
+            MyWriteProductStatusThread.isWriteProductStatus =false;
 
             g_bIsUAGetInfo =false;
 
@@ -170,11 +166,6 @@ int main(int argc, char *argv[])
             sleep_for(3s);
         }
     }
-
-    delete MyConnectDatabaseThread;
-    delete MyConnectUAThread;
-    delete MyReadOperationThread;
-    delete MyWriteProductStatusThread;
 
     UA_Client_disconnect(client);
 

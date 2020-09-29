@@ -54,7 +54,7 @@ void CConnectDatabaseThread::run()
     while(g_bIsMainRunning)
     {
         g_bIsMySQLConnected = db.isOpen();
-        sleep_for(5s) //每5秒查询连接状态
+        sleep_for(5s); //每5秒查询连接状态
 
         if(!g_bIsMySQLConnected)
         {
@@ -130,9 +130,9 @@ void CReadOperationThread::run()
                 isReadOperation = false;
             }
 
-            sleep_for(1s)
+            sleep_for(1s);
         }
-        sleep_for(1s)
+        sleep_for(1s);
     }
 }
 
@@ -153,8 +153,8 @@ void CWriteProductStatusThread::run()
     {
         while((isWriteProductStatus == true)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
         {
-            CThisProductStatusThread *MyThisProductStatusThread;
-            MyThisProductStatusThread = new CThisProductStatusThread;
+            //TODO 这里有错误
+            CThisProductStatusThread MyThisProductStatusThread;
 
             for(int y=0;y<=499;y++)
             {
@@ -166,30 +166,28 @@ void CWriteProductStatusThread::run()
 
                     printf("开始了！开始了！");
 
-                    MyThisProductStatusThread->start();
+                    MyThisProductStatusThread.start();
 
                     while((g_bIsFinished==false)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
                     {
-                        sleep_for(1s)
+                        sleep_for(1s);
                     }
 
 
-                    MyThisProductStatusThread->isThisProductStatus = false;
+                    MyThisProductStatusThread.isThisProductStatus = false;
                     isWriteProductStatus =false;
 
                     //等一会
-                    sleep_for(2s)
+                    sleep_for(2s);
 
                     //完成了就把线程删了
-                    delete MyThisProductStatusThread;
-
                 }
             }
 
-            sleep_for(1s)
+            sleep_for(1s);
         }
 
-        sleep_for(1s)
+        sleep_for(1s);
     }
 
 }
@@ -581,7 +579,7 @@ void CThisProductStatusThread::run()
             g_bIsFinished = true;
 
         }
-        sleep_for(1s)
+        sleep_for(1s);
     }
 }
 
