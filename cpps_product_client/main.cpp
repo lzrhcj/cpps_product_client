@@ -158,7 +158,6 @@ int main(int argc, char *argv[])
 
     UA_Client_disconnect(client);
     UA_Client_delete(client);
-    printf("程序自然退出");
     return 0;
 }
 
