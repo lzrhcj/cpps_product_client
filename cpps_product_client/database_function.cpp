@@ -1,6 +1,5 @@
 #include "database_function.h"
 
-
 deque<SOperationInfo> d_SOperationInfo(500);
 
 mutex mutexReadDatabase;
@@ -15,7 +14,6 @@ volatile bool g_bIsFinished = false;
 
 int eqpt_num;
 
-
 CConnectDatabaseThread::CConnectDatabaseThread()
 {
     g_bIsMySQLConnected = false;
@@ -29,29 +27,29 @@ CConnectDatabaseThread::~CConnectDatabaseThread()
 void CConnectDatabaseThread::run()
 {
     mysql_init(db);
-if (!mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0))
-	{
-		cout << "连接数据库失败"<< endl;
-		cout << mysql_error(db) << endl;
+    if (!mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0))
+    {
+        cout << "连接数据库失败" << endl;
+        cout << mysql_error(db) << endl;
         g_bIsMySQLConnected = false;
-	}
+    }
     else
     {
-        printf((char*)"连接数据库成功\n");
+        printf((char *)"连接数据库成功\n");
         g_bIsMySQLConnected = true;
     }
 
-    while(g_bIsMainRunning)
+    while (g_bIsMainRunning)
     {
         g_bIsMySQLConnected = (db == NULL);
         sleep_for(5s); //每5秒查询连接状态
 
-        if(!g_bIsMySQLConnected)
+        if (!g_bIsMySQLConnected)
         {
-            for(int i=1;i<=10;i++)
+            for (int i = 1; i <= 10; i++)
             {
-                printf((char*)"重连数据库第%i次\n",i);
-                g_bIsMySQLConnected = mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0);//建立数据库连接
+                printf((char *)"重连数据库第%i次\n", i);
+                g_bIsMySQLConnected = mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NULL, 0); //建立数据库连接
             }
         }
         else
@@ -60,7 +58,6 @@ if (!mysql_real_connect(db, HostName, UserName, Password, DatabaseName, Port, NU
         }
     }
 }
-
 
 CReadOperationThread::CReadOperationThread()
 {
@@ -74,9 +71,9 @@ CReadOperationThread::~CReadOperationThread()
 
 void CReadOperationThread::run(bool isReadOperation)
 {
-    while(g_bIsMainRunning == true)
+    while (g_bIsMainRunning == true)
     {
-        while ((isReadOperation == true)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
+        while ((isReadOperation == true) && (g_bIsUARunning == UA_STATUSCODE_GOOD))
         {
             mutexReadDatabase.lock();
 
@@ -86,22 +83,22 @@ void CReadOperationThread::run(bool isReadOperation)
             int oper_num = mysql_num_rows(result);
 
 #ifdef DB_CONFIG_DEBUG
-            printf("操作表总共有%i行\n",oper_num);
+            printf("操作表总共有%i行\n", oper_num);
 #endif
             // int new_size = deque_equipment_ip_port.size();
 
             for (int i = 0; i <= oper_num; i++)
             {
-				auto sql_row = mysql_fetch_row(result);
+                auto sql_row = mysql_fetch_row(result);
 
                 deque<SOperationInfo>::iterator d_SOperationInfo_iterator = d_SOperationInfo.begin();
 
-                advance(d_SOperationInfo_iterator, i);//迭代器前进i个元素，注意i是从0开始
+                advance(d_SOperationInfo_iterator, i); //迭代器前进i个元素，注意i是从0开始
 
-                d_SOperationInfo_iterator->operation_id = stoi(sql_row[0]); //读取第1列字段：id
+                d_SOperationInfo_iterator->operation_id = stoi(sql_row[0]);     //读取第1列字段：id
                 d_SOperationInfo_iterator->operation_guid_product = sql_row[1]; //读取第2列字段：guid_product
-                d_SOperationInfo_iterator->operation_name = sql_row[2]; //读取第3列字段：operation_name
-                d_SOperationInfo_iterator->operation_status = sql_row[3];//读取第5列字段：operation_status
+                d_SOperationInfo_iterator->operation_name = sql_row[2];         //读取第3列字段：operation_name
+                d_SOperationInfo_iterator->operation_status = sql_row[3];       //读取第5列字段：operation_status
 
 #ifdef DB_CONFIG_DEBUG
                 // qDebug()<<d_SOperationInfo_iterator->operation_id;
@@ -113,9 +110,7 @@ void CReadOperationThread::run(bool isReadOperation)
 
             mutexReadDatabase.unlock();
 
-
-
-            if(g_bIsFinished==true)
+            if (g_bIsFinished == true)
             {
                 isReadOperation = false;
             }
@@ -126,46 +121,44 @@ void CReadOperationThread::run(bool isReadOperation)
     }
 }
 
-
 CWriteProductStatusThread::CWriteProductStatusThread()
 {
-    isWriteProductStatus =true;
+    isWriteProductStatus = true;
 }
 
 CWriteProductStatusThread::~CWriteProductStatusThread()
 {
-    isWriteProductStatus=false;
+    isWriteProductStatus = false;
 }
 
 void CWriteProductStatusThread::run(bool isWriteProductStatus)
 {
-    while(g_bIsMainRunning == true)
+    while (g_bIsMainRunning == true)
     {
-        while((isWriteProductStatus == true)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
+        while ((isWriteProductStatus == true) && (g_bIsUARunning == UA_STATUSCODE_GOOD))
         {
             //TODO 这里有错误
             CThisProductStatusThread MyThisProductStatusThread;
 
-            for(int y=0;y<=499;y++)
+            for (int y = 0; y <= 499; y++)
             {
                 //当上料机开始操作这个产品的时候，开始线程
-                if ((d_SOperationInfo.at(y).operation_guid_product == thisProductGuid)&&
-                        (d_SOperationInfo.at(y).operation_name=="Operation_LB")&&
-                        (d_SOperationInfo.at(y).operation_status=="working"))
+                if ((d_SOperationInfo.at(y).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(y).operation_name == "Operation_LB") &&
+                    (d_SOperationInfo.at(y).operation_status == "working"))
                 {
 
                     printf("开始了！开始了！");
 
                     MyThisProductStatusThread.start();
 
-                    while((g_bIsFinished==false)&&(g_bIsUARunning == UA_STATUSCODE_GOOD))
+                    while ((g_bIsFinished == false) && (g_bIsUARunning == UA_STATUSCODE_GOOD))
                     {
                         sleep_for(1s);
                     }
 
-
                     MyThisProductStatusThread.isThisProductStatus = false;
-                    isWriteProductStatus =false;
+                    isWriteProductStatus = false;
 
                     //等一会
                     sleep_for(2s);
@@ -179,68 +172,70 @@ void CWriteProductStatusThread::run(bool isWriteProductStatus)
 
         sleep_for(1s);
     }
-
 }
 
 CThisProductStatusThread::CThisProductStatusThread()
 {
-    isThisProductStatus =true;
+    isThisProductStatus = true;
     is_new_row = false;
 
-    for(int u=0;u<=9;u++)
+    for (int u = 0; u <= 9; u++)
     {
-        flag_operation_finished[u]=false;
+        flag_operation_finished[u] = false;
     }
-
-
 }
 
 CThisProductStatusThread::~CThisProductStatusThread()
 {
-    isThisProductStatus=false;
+    isThisProductStatus = false;
 }
 
-void CThisProductStatusThread::run(CThisProductStatusThread* me)
+void CThisProductStatusThread::run(CThisProductStatusThread *me)
 {
-    while(me->isThisProductStatus)
+    while (me->isThisProductStatus)
     {
-        if (me->is_new_row==false)
+        if (me->is_new_row == false)
         {
 
-            string str_insertProduct_query=set_query(QUERY_INSERT,TABLE_PRODUCTINFO,
-            {"Guid_product","product_status",
-             "Start_time",
-             "feature_1","feature_1_status",
+            string str_insertProduct_query = set_query(QUERY_INSERT, TABLE_PRODUCTINFO,
+                                                       {
+                                                           "Guid_product",
+                                                           "product_status",
+                                                           "Start_time",
+                                                           "feature_1",
+                                                           "feature_1_status",
 
-             thisProductGuid,"working",
-             "NOW()",
-             g_str_productFeatureDescription[0],"working",} );
+                                                           thisProductGuid,
+                                                           "working",
+                                                           "NOW()",
+                                                           g_str_productFeatureDescription[0],
+                                                           "working",
+                                                       });
 
-            printf("%s\n",str_insertProduct_query.c_str());
+            printf("%s\n", str_insertProduct_query.c_str());
 
-            printf("%s\n",thisProductGuid.c_str());
+            printf("%s\n", thisProductGuid.c_str());
 
             mutexReadDatabase.lock();
-
 
             mysql_query(db, str_insertProduct_query.c_str());
 
             mutexReadDatabase.unlock();
 
-            for(int u=2;u<=g_productFeatureSize+1;u++)
+            for (int u = 2; u <= g_productFeatureSize + 1; u++)
             {
-                string str_updateProduct_query_part_1 = "feature_"+to_string(u);
+                string str_updateProduct_query_part_1 = "feature_" + to_string(u);
 
-                string str_updateProduct_query_part_2 = "feature_"+to_string(u)+"_status";
+                string str_updateProduct_query_part_2 = "feature_" + to_string(u) + "_status";
 
                 //UPDATE `cpps_db`.`tab_productinfo` SET `feature_1_status` = '11111' WHERE (`id` = '1');
 
-                string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                {str_updateProduct_query_part_1,g_str_productFeatureDescription[u-1],
-                 str_updateProduct_query_part_2,"waiting",
-                 "Guid_product",thisProductGuid});
+                string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                           {str_updateProduct_query_part_1, g_str_productFeatureDescription[u - 1],
+                                                            str_updateProduct_query_part_2, "waiting",
+                                                            "Guid_product", thisProductGuid});
 
-                printf("%s\n",str_updateProduct_query.c_str());
+                printf("%s\n", str_updateProduct_query.c_str());
 
                 mutexReadDatabase.lock();
 
@@ -249,25 +244,24 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
                 mutexReadDatabase.unlock();
             }
 
-            me->is_new_row =true;
-
+            me->is_new_row = true;
         }
 
-        for(int i=0;i<=499;i++)
+        for (int i = 0; i <= 499; i++)
         {
 
-            if (me->flag_operation_finished[0]==false)
+            if (me->flag_operation_finished[0] == false)
             {
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LB")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LB") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_1_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_1_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -275,41 +269,38 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[0]= true;
+                    me->flag_operation_finished[0] = true;
                 }
             }
 
-            if (me->flag_operation_finished[1]==false)
+            if (me->flag_operation_finished[1] == false)
             {
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LM")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LM") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_2_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_2_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
                     mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
-
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LM")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LM") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_2_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_2_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -317,58 +308,56 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[1]= true;
+                    me->flag_operation_finished[1] = true;
                 }
             }
 
-            if(me->flag_operation_finished[2]==false)
+            if (me->flag_operation_finished[2] == false)
             {
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_machine")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_machine") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_3_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_3_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
                     mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
-
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_laser")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_laser") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_3_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_3_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
                     mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
-
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_machine")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_machine") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_3_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_3_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -376,18 +365,18 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[2]= true;
+                    me->flag_operation_finished[2] = true;
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_laser")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_laser") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_3_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_3_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -395,41 +384,38 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[2]= true;
+                    me->flag_operation_finished[2] = true;
                 }
             }
 
-            if (me->flag_operation_finished[3]==false)
+            if (me->flag_operation_finished[3] == false)
             {
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_package")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_package") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_4_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_4_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
                     mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
-
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_package")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_package") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_4_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_4_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -437,22 +423,21 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[3]= true;
+                    me->flag_operation_finished[3] = true;
                 }
             }
 
-            if (me->flag_operation_finished[4]==false)
+            if (me->flag_operation_finished[4] == false)
             {
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LC") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_5_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_5_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -461,16 +446,15 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
                     mutexReadDatabase.unlock();
                 }
 
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LC") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_5_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_5_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -478,41 +462,38 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[4]= true;
+                    me->flag_operation_finished[4] = true;
                 }
             }
 
-            if (me->flag_operation_finished[5]==false)
+            if (me->flag_operation_finished[5] == false)
             {
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
-                        (d_SOperationInfo.at(i).operation_status=="working"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LC") &&
+                    (d_SOperationInfo.at(i).operation_status == "working"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_6_status","working",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_6_status", "working",
+                                                                "Guid_product", thisProductGuid});
 
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
                     mysql_query(db, str_updateProduct_query.c_str());
 
                     mutexReadDatabase.unlock();
-
                 }
 
-
-                if((d_SOperationInfo.at(i).operation_guid_product==thisProductGuid)&&
-                        (d_SOperationInfo.at(i).operation_name=="Operation_LC")&&
-                        (d_SOperationInfo.at(i).operation_status=="done"))
+                if ((d_SOperationInfo.at(i).operation_guid_product == thisProductGuid) &&
+                    (d_SOperationInfo.at(i).operation_name == "Operation_LC") &&
+                    (d_SOperationInfo.at(i).operation_status == "done"))
                 {
-                    string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-                    {"feature_6_status","done",
-                     "Guid_product",thisProductGuid});
+                    string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                               {"feature_6_status", "done",
+                                                                "Guid_product", thisProductGuid});
 
-
-                    printf("%s\n",str_updateProduct_query.c_str());
+                    printf("%s\n", str_updateProduct_query.c_str());
 
                     mutexReadDatabase.lock();
 
@@ -520,25 +501,25 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
                     mutexReadDatabase.unlock();
 
-                    me->flag_operation_finished[5]= true;
+                    me->flag_operation_finished[5] = true;
                 }
             }
         }
 
-        if( (me->flag_operation_finished[0]==true)&&
-                 (me->flag_operation_finished[1]==true)&&
-                 (me->flag_operation_finished[2]==true)&&
-                 (me->flag_operation_finished[3]==true)&&
-                 (me->flag_operation_finished[4]==true)&&
-                 (me->flag_operation_finished[5]==true))
+        if ((me->flag_operation_finished[0] == true) &&
+            (me->flag_operation_finished[1] == true) &&
+            (me->flag_operation_finished[2] == true) &&
+            (me->flag_operation_finished[3] == true) &&
+            (me->flag_operation_finished[4] == true) &&
+            (me->flag_operation_finished[5] == true))
         {
-            string str_updateProduct_query=set_query(QUERY_UPDATE,TABLE_PRODUCTINFO,
-            {"product_status","done",
-             "End_time",
-             "NOW()",
-             "Guid_product",thisProductGuid});
+            string str_updateProduct_query = set_query(QUERY_UPDATE, TABLE_PRODUCTINFO,
+                                                       {"product_status", "done",
+                                                        "End_time",
+                                                        "NOW()",
+                                                        "Guid_product", thisProductGuid});
 
-            printf("%s\n",str_updateProduct_query.c_str());
+            printf("%s\n", str_updateProduct_query.c_str());
 
             mutexReadDatabase.lock();
 
@@ -546,15 +527,13 @@ void CThisProductStatusThread::run(CThisProductStatusThread* me)
 
             mutexReadDatabase.unlock();
 
-            me->isThisProductStatus=false;
+            me->isThisProductStatus = false;
 
             g_bIsFinished = true;
-
         }
         sleep_for(1s);
     }
 }
-
 
 /*由这个函数统一生成query语句
  * QUERYTYPE querytype 对数据库操作类型，插入、更新、删除
@@ -629,7 +608,7 @@ string set_query(QUERYTYPE querytype, TABLENAME tablename, initializer_list<stri
             }
         }
     }
-        break;
+    break;
 
     case QUERY_UPDATE:
     {
@@ -681,15 +660,13 @@ string set_query(QUERYTYPE querytype, TABLENAME tablename, initializer_list<stri
             advance(param_list_iterator, i - 1);
             query_part3 += *param_list_iterator;
 
-            if(i == (size_param_list - 1))
+            if (i == (size_param_list - 1))
             {
                 query_part3 += "` = '";
             }
-
         }
-
     }
-        break;
+    break;
 
     case QUERY_DELETE:
     {
@@ -714,10 +691,8 @@ string set_query(QUERYTYPE querytype, TABLENAME tablename, initializer_list<stri
         query_part3 += *param_list.begin();
         query_part3 += "` = '";
         query_part3 += *param_list.end();
-
     }
-        break;
-
+    break;
     }
 
     query_part3 += "');";
@@ -725,7 +700,4 @@ string set_query(QUERYTYPE querytype, TABLENAME tablename, initializer_list<stri
     query = query_part1 + query_part2 + query_part3;
 
     return query;
-
 }
-
-
